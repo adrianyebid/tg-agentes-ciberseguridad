@@ -1,0 +1,51 @@
+# --- Claude Code ---
+.claude/worktrees/
+.claude/settings.local.json
+CLAUDE.md
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editores / IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Python (previsible en los agentes de los laboratorios) ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# --- Node.js (por si algún lab usa herramientas basadas en JS/TS) ---
+node_modules/
+npm-debug.log*
+
+# --- Secretos y credenciales: NUNCA subir esto al remoto ---
+.env
+.env.*
+*.key
+*.pem
+secrets.*
+credentials.*
+config.local.*
+
+# --- Salidas y artefactos de los laboratorios (logs, capturas, resultados de escaneos) ---
+*.log
+03-laboratorios/**/output/
+03-laboratorios/**/logs/
+03-laboratorios/**/*.pcap
+03-laboratorios/**/screenshots/
+
+# --- Archivos temporales / de respaldo ---
+*.tmp
+*.bak
+*~
