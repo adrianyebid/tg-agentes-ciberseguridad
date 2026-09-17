@@ -57,7 +57,3 @@ en entornos virtualizados y aislados, siguiendo principios de hacking ético
 y sin afectar sistemas o infraestructuras reales fuera del control del
 autor.
 
-## Estado Actual
-
-Ver la sección "Estado Actual" en [CLAUDE.md](CLAUDE.md) para el avance
-actualizado del proyecto.
