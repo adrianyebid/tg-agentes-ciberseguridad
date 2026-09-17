@@ -78,12 +78,3 @@ https://github.com/joaomdmoura/crewAI
 [18] Microsoft, "Semantic Kernel," GitHub repository, 2023. [Online].
 Available: https://github.com/microsoft/semantic-kernel
 
----
-
-**Nota de verificación:** las referencias [1], [4]-[10] corresponden a
-*preprints* de arXiv y a la publicación de ESEC/FSE 2023 citada en [6]; se
-recomienda verificar identificadores de arXiv, DOI y datos de publicación
-exactos (páginas, editorial, fecha de acceso) antes de la entrega final del
-informe, cruzándolos contra las bases de datos oficiales (arXiv, ACM
-Digital Library, IEEE Xplore) y el gestor bibliográfico que se use para el
-documento final.
