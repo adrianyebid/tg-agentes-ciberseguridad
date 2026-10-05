@@ -1,0 +1,5 @@
+# Dependencias del agente de reconocimiento.
+# SDK oficial de Anthropic para la Messages API.
+anthropic>=0.40.0
+# Carga de variables desde el archivo .env.
+python-dotenv>=1.0.0

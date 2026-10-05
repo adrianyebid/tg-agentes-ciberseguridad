@@ -32,6 +32,7 @@ npm-debug.log*
 # --- Secretos y credenciales: NUNCA subir esto al remoto ---
 .env
 .env.*
+!.env.example
 *.key
 *.pem
 secrets.*

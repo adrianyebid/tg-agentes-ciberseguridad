@@ -1,0 +1,64 @@
+# Laboratorio 1 — Reconocimiento automatizado con agentes
+#
+# Define dos máquinas en una red interna AISLADA:
+#   - atacante: contenedor con el agente de IA (Python) + herramientas de
+#               reconocimiento (nmap, whatweb, gobuster). Tiene DOS redes:
+#               la interna (para alcanzar a la víctima) y la externa (bridge),
+#               cuyo único fin es permitir la salida HTTPS hacia la API del
+#               modelo. No expone ningún puerto hacia el host.
+#   - victima:  aplicación web vulnerable (DVWA) con varios servicios/tecnologías
+#               que enumerar. SOLO está conectada a la red interna, por lo que
+#               NO tiene salida a internet ni es accesible desde fuera.
+#
+# Principio de aislamiento (ver ../../02-arquitectura-labs/arquitectura-tecnica.md):
+# la víctima vive en una red `internal: true`; nada del laboratorio es
+# alcanzable desde el exterior.
+
+services:
+  victima:
+    image: vulnerables/web-dvwa:latest
+    container_name: lab1-victima
+    networks:
+      interna:
+        ipv4_address: 172.28.0.10
+    # Sin `ports:` a propósito: la víctima no se publica al host.
+    restart: "no"
+
+  atacante:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lab1-atacante
+    depends_on:
+      - victima
+    networks:
+      interna:
+        ipv4_address: 172.28.0.20
+      externa: {}
+    env_file:
+      - .env            # ANTHROPIC_API_KEY y configuración del agente
+    environment:
+      # Objetivo del reconocimiento (la víctima en la red interna).
+      LAB_OBJETIVO: "172.28.0.10"
+      # Lista blanca de objetivos permitidos (separados por coma).
+      LAB_OBJETIVOS_PERMITIDOS: "172.28.0.10"
+    volumes:
+      # Los resultados (logs JSONL, informe) quedan en el repo para análisis.
+      - ./output:/agente/output
+    # Mantiene el contenedor vivo para poder lanzar el agente manualmente
+    # desde la guía (docker compose exec). No se ejecuta solo.
+    command: ["sleep", "infinity"]
+    restart: "no"
+
+networks:
+  # Red interna aislada: atacante <-> víctima, SIN salida a internet.
+  interna:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+  # Red externa (bridge normal): únicamente para que el atacante alcance
+  # la API del modelo (api.anthropic.com) por HTTPS.
+  externa:
+    driver: bridge
