@@ -50,3 +50,6 @@ config.local.*
 *.tmp
 *.bak
 *~
+
+# --- Guía de estudio personal: NO versionar (solo local) ---
+GUIA-SUSTENTACION.md
