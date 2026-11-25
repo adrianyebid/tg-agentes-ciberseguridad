@@ -108,6 +108,13 @@ vulnerabilidades con su evidencia y CVE**. Guarda `output/informe-*.md` y
 
 ## 7. Análisis y Preguntas de Reflexión
 
+Genera la tabla de métricas y la verificación de CVE (qué CVE citó el agente y
+si están en la evidencia):
+```bash
+python3 analizar_metricas.py
+python3 verificar_cves.py
+```
+
 Completa las tablas de [resultados.md](resultados.md) y responde:
 
 **Precisión (lo central)**
@@ -156,6 +163,7 @@ lab2-vulnerabilidades/
 ├── .env.example           # plantilla de configuración (copiar a .env)
 ├── resultados.md          # plantilla para registrar precisión y métricas
 ├── analizar_metricas.py   # agrega las métricas de las corridas
+├── verificar_cves.py      # cruza las CVE citadas con la evidencia (precisión)
 └── agente/
     ├── agente_vuln.py     # el agente de análisis de vulnerabilidades
     └── requirements.txt
