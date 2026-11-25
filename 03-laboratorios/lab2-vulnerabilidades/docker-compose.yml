@@ -1,0 +1,66 @@
+# Laboratorio 2 — Escaneo y análisis de vulnerabilidades con agentes
+#
+# Misma arquitectura del Lab 1 (ver ../../02-arquitectura-labs/arquitectura-tecnica.md):
+#   - victima : DVWA en la red interna AISLADA (sin salida a internet).
+#   - atacante: agente de IA + herramientas de análisis de vulnerabilidades
+#               (nmap con scripts vuln, whatweb, nikto, searchsploit).
+#   - ollama  : (OPCIONAL, perfil "local") servidor de modelos locales gratuitos.
+#
+# Usa una subred distinta a la del Lab 1 (172.29.0.0/24) para que ambos
+# laboratorios puedan coexistir sin conflicto.
+#
+#   Modelo de pago (Anthropic):    docker compose up -d --build
+#   Modelo local/gratis (Ollama):  docker compose --profile local up -d --build
+
+services:
+  victima:
+    image: vulnerables/web-dvwa:latest
+    container_name: lab2-victima
+    networks:
+      interna:
+        ipv4_address: 172.29.0.10
+    restart: "no"
+
+  atacante:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lab2-atacante
+    depends_on:
+      - victima
+    networks:
+      interna:
+        ipv4_address: 172.29.0.20
+      externa: {}
+    env_file:
+      - .env
+    environment:
+      LAB_OBJETIVO: "172.29.0.10"
+      LAB_OBJETIVOS_PERMITIDOS: "172.29.0.10"
+    volumes:
+      - ./output:/agente/output
+    command: ["sleep", "infinity"]
+    restart: "no"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: lab2-ollama
+    profiles: ["local"]
+    networks:
+      externa: {}
+    volumes:
+      - ollama_models:/root/.ollama
+    restart: "no"
+
+networks:
+  interna:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.29.0.0/24
+  externa:
+    driver: bridge
+
+volumes:
+  ollama_models:

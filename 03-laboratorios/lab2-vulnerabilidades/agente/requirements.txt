@@ -1,0 +1,4 @@
+# Dependencias del agente de análisis de vulnerabilidades.
+anthropic>=0.40.0      # modelos de pago (Anthropic / Claude)
+openai>=1.40.0         # se usa para hablar con Ollama (modelos locales gratis)
+python-dotenv>=1.0.0   # carga la configuración desde .env
