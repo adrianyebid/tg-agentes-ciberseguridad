@@ -52,7 +52,7 @@ config.local.*
 *~
 
 # --- Guía de estudio personal: NO versionar (solo local) ---
-GUIA-SUSTENTACION.md
+GUIA-SUSTENTACION*.md
 
 # --- Carpeta para compartir con el profesor: NO versionar (solo local) ---
 lab1-distribuible/
