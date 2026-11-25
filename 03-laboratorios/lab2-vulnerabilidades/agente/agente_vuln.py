@@ -47,6 +47,9 @@ MODELO = os.getenv("LAB_MODELO") or _MODELOS_DEFECTO.get(PROVEEDOR, "qwen2.5:3b"
 OLLAMA_URL = os.getenv("LAB_OLLAMA_URL", "http://ollama:11434/v1")
 
 MAX_ITERACIONES = int(os.getenv("LAB_MAX_ITERACIONES", "25"))
+# Tope de tokens por respuesta del modelo. Debe ser holgado: el resumen final
+# priorizado puede ser largo y, si se alcanza el tope, queda cortado.
+MAX_TOKENS_RESPUESTA = int(os.getenv("LAB_MAX_TOKENS", "8192"))
 TIMEOUT_HERRAMIENTA = int(os.getenv("LAB_TIMEOUT_HERRAMIENTA", "300"))
 OBJETIVO = os.getenv("LAB_OBJETIVO", "172.29.0.10")
 OBJETIVOS_PERMITIDOS = {
@@ -290,7 +293,7 @@ def mensajes_iniciales() -> list[dict]:
 def llamar_modelo(cliente, mensajes: list[dict]) -> dict:
     if PROVEEDOR == "anthropic":
         resp = cliente.messages.create(
-            model=MODELO, max_tokens=2048, system=SYSTEM_PROMPT,
+            model=MODELO, max_tokens=MAX_TOKENS_RESPUESTA, system=SYSTEM_PROMPT,
             tools=tools_anthropic(), messages=mensajes,
         )
         texto = "".join(b.text for b in resp.content if b.type == "text").strip()
@@ -298,13 +301,15 @@ def llamar_modelo(cliente, mensajes: list[dict]) -> dict:
                for b in resp.content if b.type == "tool_use"]
         return {
             "texto": texto, "tool_calls": tcs, "termino": resp.stop_reason != "tool_use",
+            "truncado": resp.stop_reason == "max_tokens",
             "tokens_in": resp.usage.input_tokens, "tokens_out": resp.usage.output_tokens,
             "raw": resp,
         }
 
     resp = cliente.chat.completions.create(
-        model=MODELO, messages=mensajes, tools=tools_openai(), max_tokens=2048,
+        model=MODELO, messages=mensajes, tools=tools_openai(), max_tokens=MAX_TOKENS_RESPUESTA,
     )
+    truncado = resp.choices[0].finish_reason == "length"
     msg = resp.choices[0].message
     texto = (msg.content or "").strip()
     tcs = []
@@ -316,7 +321,7 @@ def llamar_modelo(cliente, mensajes: list[dict]) -> dict:
         tcs.append({"id": tc.id, "nombre": tc.function.name, "args": args})
     u = resp.usage
     return {
-        "texto": texto, "tool_calls": tcs, "termino": not tcs,
+        "texto": texto, "tool_calls": tcs, "termino": not tcs, "truncado": truncado,
         "tokens_in": getattr(u, "prompt_tokens", 0) if u else 0,
         "tokens_out": getattr(u, "completion_tokens", 0) if u else 0,
         "raw": msg,
@@ -372,6 +377,7 @@ def main() -> int:
     registrar({"tipo": "inicio", "proveedor": PROVEEDOR, "objetivo": OBJETIVO, "modelo": MODELO})
 
     resumen_final = ""
+    resumen_truncado = False
 
     for iteracion in range(1, MAX_ITERACIONES + 1):
         n_pasos += 1
@@ -391,11 +397,17 @@ def main() -> int:
 
         registrar({
             "tipo": "turno_modelo", "iteracion": iteracion, "texto": res["texto"],
-            "termino": res["termino"], "tokens_in": res["tokens_in"], "tokens_out": res["tokens_out"],
+            "termino": res["termino"], "truncado": res["truncado"],
+            "tokens_in": res["tokens_in"], "tokens_out": res["tokens_out"],
         })
 
         if res["termino"]:
-            print("\n[✓] El agente finalizó el análisis de vulnerabilidades.")
+            if res["truncado"]:
+                resumen_truncado = True
+                print(f"\n[!] AVISO: la respuesta alcanzó el tope de {MAX_TOKENS_RESPUESTA} tokens "
+                      "y quedó CORTADA. Sube LAB_MAX_TOKENS y repite la corrida.")
+            else:
+                print("\n[✓] El agente finalizó el análisis de vulnerabilidades.")
             break
 
         append_asistente(mensajes, res)
@@ -455,6 +467,7 @@ def main() -> int:
         "tokens_entrada": tokens_in,
         "tokens_salida": tokens_out,
         "costo_estimado_usd": round(costo, 4),
+        "resumen_truncado": resumen_truncado,
     }
     registrar({"tipo": "fin", "metricas": metricas})
 
